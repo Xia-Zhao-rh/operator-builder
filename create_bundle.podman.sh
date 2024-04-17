@@ -30,9 +30,10 @@ cp ../default_main.yml roles/${kind}/defaults/main.yml
 cp ../task_main.yml roles/${kind}/tasks/main.yml
 
 #build operator image
-#docker buildx build . --push --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x --tag quay.io/olmqe/olmtest-operator-base:${kind}
-docker build . -f Dockerfile --tag quay.io/olmqe/olmtest-operator-base:${kind}
-docker push quay.io/olmqe/olmtest-operator-base:${kind}
+podman manifest create quay.io/olmqe/olmtest-operator-base:${kind}
+podman build --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x  --manifest quay.io/olmqe/olmtest-operator-base:${kind}  .
+podman manifest push quay.io/olmqe/olmtest-operator-base:${kind}
+
 
 #make bundle
 make bundle IMG=quay.io/olmqe/olmtest-operator-base:${kind}
@@ -46,9 +47,8 @@ if [ $retVal -ne 0 ]; then
 fi
 mv bundle/manifests/${bundledir}.clusterserviceversion.yaml.new bundle/manifests/${bundledir}.clusterserviceversion.yaml
 
-#docker buildx build . --push --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
-docker build . -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
-docker push quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
+podman build . -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
+podman push quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
 mv bundle bundle.0.0.1
 
 index_config=${catalogdir}/catalog-config.yaml
@@ -68,9 +68,8 @@ do
     mv bundle/manifests/${bundledir}.clusterserviceversion.yaml.new bundle/manifests/${bundledir}.clusterserviceversion.yaml
     sed "s/version: 0.0.1/version: ${version_index}/g" bundle/manifests/${bundledir}.clusterserviceversion.yaml > bundle/manifests/${bundledir}.clusterserviceversion.yaml.new
     mv bundle/manifests/${bundledir}.clusterserviceversion.yaml.new bundle/manifests/${bundledir}.clusterserviceversion.yaml
-    #docker buildx build . --push --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
-    docker build . -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
-    docker push quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
+    podman build . -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
+    podman push quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
     echo "  - Image: quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}" >> ${index_config}
     mv bundle bundle.${version_index}
 done
@@ -80,6 +79,6 @@ mkdir catalog
 opm alpha render-template semver catalog-config.yaml -o yaml > catalog/index.yaml
 opm validate catalog
 opm generate dockerfile catalog
-#docker buildx build . --push --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x -f catalog.Dockerfile -t quay.io/olmqe/olmtest-operator-index:${kind}
-docker build . -f catalog.Dockerfile -t quay.io/olmqe/olmtest-operator-index:${kind}
-docker push quay.io/olmqe/olmtest-operator-index:${kind}
+podman manifest create quay.io/olmqe/olmtest-operator-index:${kind}
+podman build --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x  --manifest quay.io/olmqe/olmtest-operator-index:${kind}  . -f catalog.Dockerfile
+podman manifest push quay.io/olmqe/olmtest-operator-index:${kind}

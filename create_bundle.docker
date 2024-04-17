@@ -44,7 +44,8 @@ if [ $retVal -ne 0 ]; then
 fi
 mv bundle/manifests/${bundledir}.clusterserviceversion.yaml.new bundle/manifests/${bundledir}.clusterserviceversion.yaml
 
-docker buildx build . --push --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
+docker build . -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
+docker push quay.io/olmqe/olmtest-operator-bundle:v0.0.1-${kind}
 mv bundle bundle.0.0.1
 
 index_config=${catalogdir}/catalog-config.yaml
@@ -64,7 +65,8 @@ do
     mv bundle/manifests/${bundledir}.clusterserviceversion.yaml.new bundle/manifests/${bundledir}.clusterserviceversion.yaml
     sed "s/version: 0.0.1/version: ${version_index}/g" bundle/manifests/${bundledir}.clusterserviceversion.yaml > bundle/manifests/${bundledir}.clusterserviceversion.yaml.new
     mv bundle/manifests/${bundledir}.clusterserviceversion.yaml.new bundle/manifests/${bundledir}.clusterserviceversion.yaml
-    docker buildx build . --push --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
+    docker build . --push  -f bundle.Dockerfile -t quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
+    docker push quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}
     echo "  - Image: quay.io/olmqe/olmtest-operator-bundle:v${version_index}-${kind}" >> ${index_config}
     mv bundle bundle.${version_index}
 done
